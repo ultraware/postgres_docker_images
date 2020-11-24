@@ -1,0 +1,39 @@
+# docker-compose -f mindsdb_postgres_mysql_compose.yml up 
+# thanks to https://github.com/AmebaBrain/postgres_docker_images
+
+version: "3.7"
+
+services:
+  mysql:
+    image: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - 3306:3306
+    volumes:
+      - "./sql/mysql_setup.sql:/docker-entrypoint-initdb.d/mysql_setup.sql:z"
+
+  postgres:
+    # if you build image locally and tagged it as "postgres_mysql_fdw"
+    #image: postgres_mysql_fdw
+
+    # if you want to use prebuilt image
+    image: toleg/postgres_mysql_fdw
+    environment:
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - 5432:5432
+    volumes:
+      - "./sql/postgres_mysql_setup.sql:/docker-entrypoint-initdb.d/postgres_mysql_setup.sql:z"
+    depends_on:
+      - mysql
+
+  # https://docs.mindsdb.com/Installing/
+  mindsdb:
+    image: mindsdb/mindsdb
+    ports:
+      - 47334:47334
+      - 47335:47335
+      - 47336:47336
+    depends_on:
+      - postgres
